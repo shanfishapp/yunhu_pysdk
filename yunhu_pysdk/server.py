@@ -45,7 +45,7 @@ class Webhook:
     cmdid = alias("event.message.commandId")
     level = alias("event.sender.senderUserLevel")
     nick = alias("event.sender.senderNickName")
-    
+    user_id = alias("event.sender.senderId")
     @property
     def chat_type(self):
         """动态获取聊天类型"""
@@ -119,6 +119,7 @@ class Webhook:
                 data.msgtype = self.msgtype
                 data.level = self.level
                 data.nick = self.nick
+                data.user_id = self.user_id
                 
                 logger.debug(f"接收到Webhook数据: {data}")
                 
