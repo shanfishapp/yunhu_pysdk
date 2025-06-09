@@ -1,3 +1,4 @@
+import sys
 from colorama import init, Fore, Back, Style
 from datetime import datetime
 # 初始化Colorama（在Windows上自动启用颜色支持）
@@ -25,3 +26,9 @@ class Logger:
         time = cls._get_time()
         cls._write(time, "ERROR", msg)
         print(Fore.RED + "[ERROR]" + Fore.RESET + Fore.CYAN + f"[{time}]" + Fore.RESET + msg)
+
+    def critical(cls, msg):
+        time = cls._get_time()
+        cls._write(time, "CRITICAL", msg)
+        print(Fore.RED + "[CRITICAL]" + Fore.RESET + Fore.CYAN + f"[{time}]" + Fore.RESET + msg)
+        sys.exit()
