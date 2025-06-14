@@ -1,38 +1,25 @@
-import json
-import os
-from pathlib import Path
-from yunhu_pysdk.logger import Logger
+from typing import ClassVar, Optional
 
 class sdk:
-    _config_path = Path("config.json")  # 配置文件路径
-    logger = Logger()
+    _token: ClassVar[Optional[str]] = None
+    _initialized: ClassVar[bool] = False
 
     @classmethod
-    def init(cls, token, data=True):
-        """将 Token 存储到 config.json"""
-        try:
-            # 写入配置文件
-            with open(cls._config_path, "w") as f:
-                json.dump({"token": token}, f)
-            cls.logger.info(f"Token 已保存到 {cls._config_path}")
-        except Exception as e:
-            cls.logger.error(f"保存 Token 失败: {e}")
-            exit(1)
-        if data == True:
-            cls.logger.debug("正在加载Webhook数据....")
-            
+    def init(cls, token: str) -> None:
+        if cls._initialized:
+            await logger.error("Token无法重复初始化", True)
+        if not isinstance(token, str) or not token.strip():
+           await logger.error("无效的Token", True)
+        cls._token = token
+        cls._initialized = True
 
     @classmethod
-    def get(cls):
-        """从 config.json 读取 Token"""
-        try:
-            if not cls._config_path.exists():
-                cls.logger.error("配置文件不存在，请先调用 init(token)")
-                exit(1)
-            
-            with open(cls._config_path, "r") as f:
-                config = json.load(f)
-                return config["token"]
-        except Exception as e:
-            cls.logger.error(f"读取 Token 失败: {e}")
-            exit(1)
+    def get(cls) -> str:
+        if cls._token is None:
+            await logger.error("Token未设置", True)
+        return cls._token
+
+    @classmethod
+    def clear(cls) -> None:
+        cls._token = None
+        cls._initialized = False
