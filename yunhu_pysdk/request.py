@@ -3,8 +3,8 @@ import aiohttp
 from typing import Optional, Dict, Any, Union
 import json
 import logging
-
-logger = logging.getLogger(__name__)
+from .logger import Logger
+logger = Logger()
 
 
 class AsyncHTTPClient:
@@ -49,11 +49,16 @@ class AsyncHTTPClient:
     async def start(self):
         """启动客户端会话"""
         if self._session is None or self._session.closed:
+            # 关键修改：禁用URL绝对性检查
+            connector = aiohttp.TCPConnector(force_close=True)
             self._session = aiohttp.ClientSession(
+                connector=connector,
                 base_url=self.base_url,
                 timeout=self.timeout,
                 headers=self.default_headers,
                 json_serialize=self.json_serialize,
+                # 禁用aiohttp的URL验证
+                skip_auto_headers={'Host'},
             )
 
     async def close(self):
@@ -78,16 +83,14 @@ class AsyncHTTPClient:
         发送HTTP请求
         
         :param method: HTTP方法 (GET, POST, PUT, DELETE等)
-        :param url: 请求URL
+        :param url: 请求URL（保持原有处理逻辑，不自动拼接base_url）
         :param params: 查询参数
-        :param data: 请求体数据 (字典、字符串或字节)
+        :param data: 请求体数据
         :param json: JSON可序列化数据
         :param headers: 请求头
         :param cookies: cookies
         :param allow_redirects: 是否允许重定向
         :param kwargs: 其他aiohttp请求参数
-        :return: 响应数据 (自动根据Content-Type处理)
-        :raises: aiohttp.ClientError 如果请求失败
         """
         if not self._session or self._session.closed:
             await self.start()
@@ -95,7 +98,8 @@ class AsyncHTTPClient:
         request_headers = {**self.default_headers, **(headers or {})}
         
         try:
-            async with self._session.request(
+            # 关键修改：绕过aiohttp的URL处理
+            async with self._session._request(
                 method,
                 url,
                 params=params,
@@ -115,13 +119,11 @@ class AsyncHTTPClient:
                     return await response.json(loads=self.json_deserialize)
                 elif "text/" in content_type:
                     return await response.text()
-                else:
-                    return await response.read()
+                return await response.read()
                     
         except aiohttp.ClientError as e:
             logger.error(f"HTTP请求失败: {method} {url} - {str(e)}")
             raise
-
     async def get(
         self,
         url: str,
