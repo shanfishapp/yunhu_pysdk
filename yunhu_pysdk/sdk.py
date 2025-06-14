@@ -14,7 +14,7 @@ class sdk:
         cls._initialized = True
 
     @classmethod
-    def get(cls) -> str:
+    async def get(cls) -> str:
         if cls._token is None:
             await logger.error("Token未设置", True)
         return cls._token
