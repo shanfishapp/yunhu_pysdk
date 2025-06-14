@@ -1,4 +1,6 @@
 from .sdk import sdk
-from .openapi import Send
-from .logger import Logger
-__all__ = ['sdk', "Send", "Logger"]
+from .api import Send
+from .bot import BOT
+from .logger import logger
+
+__all__ = ['sdk', 'Send', 'BOT', 'logger']
